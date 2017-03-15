@@ -15,7 +15,10 @@ let FoodTruckSchema = new Schema ({
   avgcost: Number,
   geometry: {
     type: { type: String, default: 'Point'}, //Point is the default value
-    coordinates: [Number]
+    coordinates: {
+      "lat": Number,
+      "long": Number
+    }
   },
   // array of objects 'review'
   reviews: [{type: Schema.Types.ObjectId, ref: 'Review'}]

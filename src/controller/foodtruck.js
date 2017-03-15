@@ -17,8 +17,8 @@ api.post('/add', authenticate, (req, res) => {  // if we remove the comments fro
     newFoodTruck.name = req.body.name;
     newFoodTruck.foodtype = req.body.foodtype;
     newFoodTruck.avgcost = req.body.avgcost;
-    newFoodTruck.geometry.coordinates = req.body.geometry.coordinates;
-
+    newFoodTruck.geometry.coordinates.long = req.body.geometry.coordinates.long;
+    foodtruck.geometry.coordinates.lat = req.body.geometry.coordinates.lat;
     // save is a method from mongoose
     newFoodTruck.save(err => {
       if(err) {
@@ -79,7 +79,8 @@ api.put('/:id', authenticate, (req, res) => {
     foodtruck.name = req.body.name;
     foodtruck.foodtype = req.body.foodtype;
     foodtruck.avgcost = req.body.avgcost;
-    foodtruck.geometry.coordinates = req.body.geometry.coordinates;
+    foodtruck.geometry.coordinates.lat = req.body.geometry.coordinates.lat;
+    foodtruck.geometry.coordinates.long = req.body.geometry.coordinates.long;
     foodtruck.save(err => {
       if(err) {
         res.send(err);
@@ -92,20 +93,34 @@ api.put('/:id', authenticate, (req, res) => {
 // Remove a foodtruck and it's reviews
 // '/v1/foodtruck/:id' - Delete
 api.delete('/:id', authenticate, (req, res) => {
-  FoodTruck.remove({
-    _id: req.params.id
-  }, (err, foodtruck) => {
-    if(err) {
-      res.send(err);
+  FoodTruck.findById(req.params.id, (err, foodtruck) => {
+    if (err) {
+      // we can inform of the status code and send whatever we want to the console.
+      res.status(500).send(err);
+      return;
     }
-    Review.remove({ foodtruck: req.params.id }, (err, review) => {
+    if (foodtruck == null) {
+      // yo can check for the meanings of the satus codes online
+      res.status(404).send("Foodtruck not found");
+      return;
+    }
+    FoodTruck.remove({
+      _id: req.params.id
+    }, (err, foodtruck) => {
       if(err) {
-        res.send(err);
+        res.status(500).send(err);
+        return;
       }
-      res.json({message: "FoodTruck and Reviews removed OK" });
+      Review.remove({ foodtruck: req.params.id }, (err, review) => {
+        if(err) {
+          res.send(err);
+        }
+        res.json({message: "FoodTruck and Reviews removed OK" });
+      });
     });
   });
 });
+  
 
 // add review for a specific foodtruck id
 // '/v1/foodtruck/reviews/add/:id'
